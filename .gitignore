@@ -1,2 +1,4 @@
 ai/__pycache__/
+ai/.ipynb_checkpoints/
 *.pyc
+*.pgn
