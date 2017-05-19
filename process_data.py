@@ -14,7 +14,7 @@ def process_data(filename, n):
 	move_from = []
 	move_to = []
 	count = 0
-	with open('../data/' + filename, 'r') as f:
+	with open(filename, 'r') as f:
 		for line in f:
 			count += 1
 			if count % 10000 == 0:
@@ -84,5 +84,3 @@ def get_move_from_to(move):
 	x[move_from] = 1	
 	y[move_to] = 1
 	return str(x).replace(' ',''), str(y).replace(' ','')
-
-gen_matrix_data('chess_db.pgn','m2.txt')

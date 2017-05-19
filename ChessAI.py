@@ -28,7 +28,7 @@ class ChessAI():
                 	
 
 		self._from_nn = load_model(from_file)
-		self._to_file = load_model(to_file)
+		self._to_nn = load_model(to_file)
 
 	def getMove(self, board):
 		if board.turn:
@@ -36,16 +36,71 @@ class ChessAI():
 		else:
 			t = -1
 		input_board = board_to_str(board,t)
-		input_board = input_board.reshape((1,72))
-		print(input_board)
-		results = self._from_nn.predict(input_board)		
-		print(results)
+		from_board = input_board.reshape((1,72))
+		results = self._from_nn.predict(from_board)		
+		move_from = self._get_sorted(results)
+		moves = self._get_to(input_board, move_from)
+		for move_from, move_to in moves:
+			try:
+				board.push_uci(move_from+move_to)
+				return move_from + move_to
+			except:
+				pass
+		return "none"
+				
+
+	def _get_sorted(self, softmax):
+		''' 
+		Returns a list of move numbers in order of best -> worst given a softmax
+		'''
+		softmax = list(softmax[0])
+		results = []
+		for i in range(len(softmax)):
+			results.append((i,softmax[i]))	
+		r = sorted(results, key = lambda x: x[1], reverse=True)
+		r = [x[0] for x in r]
+		return r
+
+	def _get_to(self, board, froms):
+		results = []
+		for move in froms:
+			from_board = self._get_from_board(move)
+			brd = np.append(board,from_board) 	
+			brd = brd.reshape((1,144))
+			tos = self._to_nn.predict(brd)
+			x = self._get_sorted(tos)[0:5]
+			for move_to in x:
+				results.append((self._get_uci_from_int(move),self._get_uci_from_int(move_to)))
+		return results
+
+	def _get_from_board(self, num):
+		res = [0]*72
+		res[num] = 1	
+		return res
+	
+	def _get_uci_from_int(self, num):
+		m = {0:'a',1:'b',2:'c',3:'d',4:'e',5:'f',6:'g',7:'h'}
+		col = m[num%8]
+		row = 8 - int(num/8) 		
+		return str(col) + str(row)
+	
 
 
 import chess
 import copy
 b = chess.Board()
 c = ChessAI()
-move = c.getMove(copy.deepcopy(b))
-print("Move:",move)
+while(True):
+	#print(b)
+	while True:
+		m = input("Your move: ")
+		try:
+			b.push_uci(m)
+			break;
+		except:
+			print("Invalid move.")
+
+	move = c.getMove(copy.deepcopy(b))
+	print("Computers move:",move)
+	b.push_uci(move)
 
