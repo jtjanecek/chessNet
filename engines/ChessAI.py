@@ -90,15 +90,11 @@ import chess
 import copy
 b = chess.Board()
 c = ChessAI()
+
+
 while(True):
 	#print(b)
-	while True:
-		m = input("Your move: ")
-		try:
-			b.push_uci(m)
-			break;
-		except:
-			print("Invalid move.")
+	
 
 	move = c.getMove(copy.deepcopy(b))
 	print("Computers move:",move)

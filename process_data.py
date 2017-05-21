@@ -9,7 +9,7 @@ move_map = {'p':-1, 'n':-2,'b':-3,'r':-4,'q':-5,'k':-6,
 move_to_map = {'a':0,'b':1,'c':2,'d':3,'e':4,'f':5,'g':6,'h':7}
 
 
-def process_data(filename, n):
+def process_data(filename, start, stop):
 	board_list = []
 	move_from = []
 	move_to = []
@@ -17,10 +17,12 @@ def process_data(filename, n):
 	with open(filename, 'r') as f:
 		for line in f:
 			count += 1
-			if count % 10000 == 0:
-				print("Processing game:",count)			
-			if n == count:
+			if count < start:
+				continue
+			if count == end:
 				break;
+			if count % 100000 == 0:
+				print("Processing game:",count)			
 			line = line.strip()
 			cols = line.split(" ")
 			x = eval(cols[0])
@@ -36,14 +38,14 @@ def gen_matrix_data(pgn_db, matrix_file):
 	count = 0
 	pgn_file = open(pgn_db)
 	f = open(matrix_file,'a')
+	print()
 	while True:
 		count += 1
 		node = chess.pgn.read_game(pgn_file)
 		if node == None:
 			break;
-		if count % 100 == 0:
-			print("Game Number: " + str(count))
-
+		if count % 500 == 0:
+			print("Game: ",count)
 		turn = 1
 		board = chess.Board()
 		while not node.is_end():
@@ -59,7 +61,7 @@ def gen_matrix_data(pgn_db, matrix_file):
 				turn = -1
 			else:
 				turn = 1
-	
+	print('Games from:',pgn_db,':',count)	
 	pgn_file.close();
 	f.close()
 
@@ -84,3 +86,19 @@ def get_move_from_to(move):
 	x[move_from] = 1	
 	y[move_to] = 1
 	return str(x).replace(' ',''), str(y).replace(' ','')
+
+
+
+
+
+#gen_matrix_data('pgnFiles/2005.pgn', 'mat.txt')
+
+
+
+if __name__ == '__main__':
+	pgn_file = input('pgn file: ')
+	matrix_file = input('matrix file to append to: ')
+	gen_matrix_data(pgn_file, matrix_file)
+
+
+

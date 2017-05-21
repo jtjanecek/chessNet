@@ -3,3 +3,4 @@ ai/.ipynb_checkpoints/
 *.pyc
 *.pgn
 *.txt
+engines/stockfish
