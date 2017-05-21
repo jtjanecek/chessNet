@@ -23,8 +23,8 @@ def board_to_str(board, turn):
 
 class ChessAI():
 	def __init__(self):
-		from_file = 'from.h5'
-		to_file = 'to.h5'
+		from_file = 'engines/from.h5'
+		to_file = 'engines/to.h5'
                 	
 
 		self._from_nn = load_model(from_file)
@@ -85,7 +85,7 @@ class ChessAI():
 		return str(col) + str(row)
 	
 
-
+'''
 import chess
 import copy
 b = chess.Board()
@@ -100,3 +100,4 @@ while(True):
 	print("Computers move:",move)
 	b.push_uci(move)
 
+'''
