@@ -8,7 +8,75 @@ move_map = {'p':-1, 'n':-2,'b':-3,'r':-4,'q':-5,'k':-6,
 
 move_to_map = {'a':0,'b':1,'c':2,'d':3,'e':4,'f':5,'g':6,'h':7}
 
+'''
+Iterates over the file data, easy for keras!
+'''
 
+def move_from_generator(filename, batch_size):
+	count = 0
+	batch_count = 0
+	x_batch = []		
+	y_batch = []
+	while True:
+		with open(filename, 'r') as f:
+			for line in f:
+				count += 1
+				if count % batch_size == 0:
+					batch_count += 1
+					yield( np.array(x_batch) , np.array(y_batch) )
+					x_batch = []
+					y_batch = []
+				else:
+
+					line = line.strip()
+					cols = line.split(" ")
+
+					x = np.array(eval(cols[0]))
+
+					y = eval(cols[1])
+					y2 = [0]*72
+					y2[y] = 1 
+					y = np.array(y2)
+
+					x_batch.append(x)
+					y_batch.append(y)
+
+
+
+'''
+Iterates over the file data, easy for keras!
+'''
+def move_to_generator(filename):
+	with open(filename, 'r') as f:
+		for line in f:
+			if count < start:
+				continue
+			if count >= stop:
+				break;
+			count += 1
+			line = line.strip()
+			cols = line.split(" ")
+			x = np.array(eval(cols[0]))
+				
+
+			y = eval(cols[1])
+			y2 = [0]*72
+			y2[y] = 1 
+			y = np.array(y2)
+
+			x = np.array(x,y)
+			
+			z = eval(cols[2])
+			z2 = [0]*72
+			z2[z] = 1
+			z = np.array(z2)
+
+			yield (x,z)
+	return	
+
+'''
+Returns a splice of a matrix text file, in numpy format
+'''
 def process_data(filename, start, stop):
 	board_list = []
 	move_from = []
@@ -16,24 +84,46 @@ def process_data(filename, start, stop):
 	count = 0
 	with open(filename, 'r') as f:
 		for line in f:
-			count += 1
 			if count < start:
 				continue
-			if count == end:
+			if count >= stop:
 				break;
 			if count % 100000 == 0:
-				print("Processing game:",count)			
+				print("Processing move:",count)			
+			count += 1
 			line = line.strip()
 			cols = line.split(" ")
 			x = eval(cols[0])
 			board_list.append(x)
 			y = eval(cols[1])
-			move_from.append(y)
+			y2 = [0]*72
+			y2[y] = 1 
+			move_from.append(y2)
 			z = eval(cols[2])
-			move_to.append(z)
+			z2 = [0]*72
+			z2[z] = 1
+			move_to.append(z2)
 	return np.array(board_list), np.array(move_from), np.array(move_to)
 
 
+'''
+Counts the number of games in pgn file
+'''
+def gen_test(pgn_db):
+	count = 0
+	pgn_file = open(pgn_db)
+	while True:
+		count += 1
+		node = chess.pgn.read_game(pgn_file)
+		if node == None:
+			break;
+	print('Games from:',pgn_db,':',count)	
+	pgn_file.close();
+
+
+'''
+Given pgn file, generate matrix file for reading
+'''
 def gen_matrix_data(pgn_db, matrix_file):
 	count = 0
 	pgn_file = open(pgn_db)
@@ -44,15 +134,14 @@ def gen_matrix_data(pgn_db, matrix_file):
 		node = chess.pgn.read_game(pgn_file)
 		if node == None:
 			break;
-		if count % 500 == 0:
-			print("Game: ",count)
+		if count % 20000 == 0:
+			print("Generating matrices for game: ",count)
 		turn = 1
 		board = chess.Board()
 		while not node.is_end():
 			next_node = node.variation(0)
 			curr_move = node.board().uci(next_node.move)
 			node = next_node
-
 			board_str = board_to_str(board, turn)
 			move_from, move_to = get_move_from_to(curr_move)
 			f.write(board_str + ' ' + move_from + ' ' + move_to + '\n') 
@@ -64,6 +153,9 @@ def gen_matrix_data(pgn_db, matrix_file):
 	print('Games from:',pgn_db,':',count)	
 	pgn_file.close();
 	f.close()
+
+
+
 
 def board_to_str(board, turn):
 	s = str(board)
@@ -85,20 +177,33 @@ def get_move_from_to(move):
 	y = [0]*72
 	x[move_from] = 1	
 	y[move_to] = 1
-	return str(x).replace(' ',''), str(y).replace(' ','')
+	#return str(x).replace(' ',''), str(y).replace(' ','')
+	return str(move_from), str(move_to) # Return index instead of entire matrix to save data
 
 
 
 
 
 #gen_matrix_data('pgnFiles/2005.pgn', 'mat.txt')
+def process():
+	m = input('matrix file: ')
+	process_data(m)
 
 
-
-if __name__ == '__main__':
+def gen():
 	pgn_file = input('pgn file: ')
 	matrix_file = input('matrix file to append to: ')
+
+	# count pgn file
+	#gen_test(pgn_file)
+
+	# test generation
 	gen_matrix_data(pgn_file, matrix_file)
 
-
+if __name__ == '__main__':
+	choice = input(" 1 for gen matrix, 2 for test_process: ")
+	if choice == '1':
+		gen()
+	elif choice == '2':
+		process()
 
