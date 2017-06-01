@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python3 -u test.py > log &
+python3 -u train_nn.py > log &

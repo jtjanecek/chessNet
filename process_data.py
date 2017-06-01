@@ -10,9 +10,63 @@ move_to_map = {'a':0,'b':1,'c':2,'d':3,'e':4,'f':5,'g':6,'h':7}
 
 '''
 Iterates over the file data, easy for keras!
+	to_from = 'from' or 'to'
 '''
 
-def move_from_generator(filename, batch_size):
+def data_generator(filename, batch_size=32, to_from='from'):
+	count = 0
+	batch_count = 0
+	x_batch = []		
+	y_batch = []
+	while True:
+		with open(filename, 'r') as f:
+			for line in f:
+				count += 1
+				if count % batch_size == 0:
+					batch_count += 1
+					yield( np.array(x_batch) , np.array(y_batch) )
+					x_batch = []
+					y_batch = []
+				else:
+
+					line = line.strip()
+					cols = line.split(" ")
+					
+					if to_from == 'from':
+						x = np.array(eval(cols[0]))
+
+						y = eval(cols[1])
+						y2 = [0]*72
+						y2[y] = 1 
+						y = np.array(y2)
+
+						x_batch.append(x)
+						y_batch.append(y)
+
+					elif to_from == 'to':
+						x = np.array(eval(cols[0]))			
+
+						y = eval(cols[1])
+						y2 = [0]*72
+						y2[y] = 1
+						y = np.array(y2)
+	
+						z = eval(cols[2])
+						z2 = [0]*72
+						z2[z] = 1
+						z = np.array(z2)
+
+						x = numpy.append(x,y)
+						x_batch.append(x)
+						y_batch.append(z)
+					else:
+						raise Exception
+
+'''
+Iterates over the file data, easy for keras!
+'''
+
+def move_from_generator(filename, batch_size=32):
 	count = 0
 	batch_count = 0
 	x_batch = []		
@@ -41,38 +95,7 @@ def move_from_generator(filename, batch_size):
 					x_batch.append(x)
 					y_batch.append(y)
 
-
-
-'''
-Iterates over the file data, easy for keras!
-'''
-def move_to_generator(filename):
-	with open(filename, 'r') as f:
-		for line in f:
-			if count < start:
-				continue
-			if count >= stop:
-				break;
-			count += 1
-			line = line.strip()
-			cols = line.split(" ")
-			x = np.array(eval(cols[0]))
-				
-
-			y = eval(cols[1])
-			y2 = [0]*72
-			y2[y] = 1 
-			y = np.array(y2)
-
-			x = np.array(x,y)
-			
-			z = eval(cols[2])
-			z2 = [0]*72
-			z2[z] = 1
-			z = np.array(z2)
-
-			yield (x,z)
-	return	
+"""
 
 '''
 Returns a splice of a matrix text file, in numpy format
@@ -104,6 +127,8 @@ def process_data(filename, start, stop):
 			z2[z] = 1
 			move_to.append(z2)
 	return np.array(board_list), np.array(move_from), np.array(move_to)
+
+"""
 
 
 '''
