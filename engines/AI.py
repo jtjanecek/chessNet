@@ -97,12 +97,13 @@ class NN_AI():
 
 
 class Minimax_AI():
-	def __init__(self, depth):
+	def __init__(self, depth, alphabeta=True):
 		self._depth = depth
 		self._opposite = {1:-1,-1:1}
 		self._move_map = {'p':-1, 'n':-3,'b':-3,'r':-5,'q':-9,'k':-200,
 		    'P': 1, 'N': 3,'B': 3,'R': 5,'Q': 9,'K': 200,
 		    '.': 0}
+		self._alpha_beta = alphabeta
 
 
 	def getMove(self, board):
@@ -110,7 +111,10 @@ class Minimax_AI():
 			self._turn = 1
 		else:
 			self._turn = -1
-		return self._minimax(board, self._depth, True)[0]
+		if self._alpha_beta:
+			return self._alphabeta(board, self._depth, True, -999999, 999999)[0]
+		else:
+			return self._minimax(board, self._depth, True)[0]
 
 	def _minimax(self, board, depth, maxPlayer):
 		legal_movelist = [str(x) for x in board.legal_moves]
@@ -141,7 +145,42 @@ class Minimax_AI():
 					bestValue = v[1]
 					bestMove = move
 			return (bestMove,bestValue)
-				
+
+	def _alphabeta(self, board, depth, maxPlayer, alpha, beta):
+		legal_movelist = [str(x) for x in board.legal_moves]
+		if depth == 0 or legal_movelist == []:
+			return ('term',self.evaluateBoard(board))
+		
+		if maxPlayer:
+			bestMove = 'none'
+			bestValue = -9999
+			for move in legal_movelist:
+				newBoard = copy.deepcopy(board)	
+				newBoard.push_uci(move)
+				v = self._alphabeta(copy.deepcopy(newBoard), depth-1, False, alpha, beta)
+				if v[1] > bestValue:
+					bestValue = v[1]
+					bestMove = move
+				alpha = max(alpha, bestValue)
+				if beta <= alpha:
+					break
+			return (bestMove,bestValue)
+
+		# minimized move
+		else:
+			bestMove = 'none'
+			bestValue = 9999
+			for move in legal_movelist:
+				newBoard = copy.deepcopy(board)	
+				newBoard.push_uci(move)
+				v = self._alphabeta(copy.deepcopy(newBoard), depth-1, True, alpha, beta)
+				if v[1] < bestValue:
+					bestValue = v[1]
+					bestMove = move
+				beta = min(beta, bestValue)
+				if beta <= alpha:
+					break
+			return (bestMove,bestValue)
 
 	def evaluateBoard(self, board):
 		sum = 0
@@ -153,7 +192,6 @@ class Minimax_AI():
 		if self._turn == -1:
 			return sum * -1
 		return sum	
-
 
 # for testing
 if __name__ == '__main__':
