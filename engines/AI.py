@@ -1,6 +1,7 @@
 import numpy as np
 import chess.pgn
 from keras.models import load_model
+import copy
 
 move_map = {'p':-1, 'n':-2,'b':-3,'r':-4,'q':-5,'k':-6,
 		    'P': 1, 'N': 2,'B': 3,'R': 4,'Q': 5,'K': 6,
@@ -99,23 +100,47 @@ class Minimax_AI():
 	def __init__(self, depth):
 		self._depth = depth
 		self._opposite = {1:-1,-1:1}
+		self._move_map = {'p':-1, 'n':-3,'b':-3,'r':-5,'q':-9,'k':-200,
+		    'P': 1, 'N': 3,'B': 3,'R': 5,'Q': 9,'K': 200,
+		    '.': 0}
+
 
 	def getMove(self, board):
 		if board.turn:
 			self._turn = 1
 		else:
 			self._turn = -1
+		return self._minimax(board, self._depth, True)[0]
 
+	def _minimax(self, board, depth, maxPlayer):
+		legal_movelist = [str(x) for x in board.legal_moves]
+		if depth == 0 or legal_movelist == []:
+			return ('term',self.evaluateBoard(board))
+		
+		if maxPlayer:
+			bestMove = 'none'
+			bestValue = -9999
+			for move in legal_movelist:
+				newBoard = copy.deepcopy(board)	
+				newBoard.push_uci(move)
+				v = self._minimax(copy.deepcopy(newBoard), depth-1, False)
+				if v[1] > bestValue:
+					bestValue = v[1]
+					bestMove = move
+			return (bestMove,bestValue)
 
-		return self._minimax(board)
-
-	def _minimax(board):
-		pass
-
-
-
-
-		return 'e2e4'
+		# minimized move
+		else:
+			bestMove = 'none'
+			bestValue = 9999
+			for move in legal_movelist:
+				newBoard = copy.deepcopy(board)	
+				newBoard.push_uci(move)
+				v = self._minimax(copy.deepcopy(newBoard), depth-1, True)
+				if v[1] < bestValue:
+					bestValue = v[1]
+					bestMove = move
+			return (bestMove,bestValue)
 				
 
 	def evaluateBoard(self, board):
@@ -124,7 +149,7 @@ class Minimax_AI():
 		for row in temp:
 			x = row.split(' ')
 			for piece in x:
-				sum += move_map[piece]
+				sum += self._move_map[piece]
 		if self._turn == -1:
 			return sum * -1
 		return sum	
