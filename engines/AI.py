@@ -21,6 +21,48 @@ def board_to_str(board, turn):
 	return np.array(result)
 
 
+class Node():
+	def __init__(self, fen, move, parentNode):
+		self._parent = parentNode	
+		self._children = []
+
+		self._fen = fen
+		self._move = move
+
+		self._won = 0
+		self._playouts = 0
+
+	def selectNextNode(self):
+		pass
+
+	def backPropagate(self, outcome):
+		pass
+
+
+
+
+class MonteCarlo():
+	def __init__(self);
+		pass
+
+	def getMove(self,board):
+		bestMove = self.runAllSimulations(board)	
+		return bestMove
+
+	def runAllSimulations(self, board):
+		topNodes = self.genNodesFromBoard(board)
+
+
+
+	def genFirstNodesFromBoard(self, board):
+		nodeList = []
+		legal_movelist = [str(x) for x in board.legal_moves]
+		for move in legal_movelist:
+			nodeList.append(Node(board.fen(), move, None) 
+		return nodeList	
+
+
+
 
 class NN_AI():
 	def __init__(self):
@@ -192,6 +234,9 @@ class Minimax_AI():
 		if self._turn == -1:
 			return sum * -1
 		return sum	
+
+
+
 
 # for testing
 if __name__ == '__main__':
