@@ -43,15 +43,21 @@ class Node():
 
 class MonteCarlo():
 	def __init__(self);
-		pass
+		self._num_simulations = 500
+		self._depth = 50
 
 	def getMove(self,board):
+		if board.turn:
+			t = 1
+		else:
+			t = -1
+		
 		bestMove = self.runAllSimulations(board)	
 		return bestMove
 
 	def runAllSimulations(self, board):
 		topNodes = self.genNodesFromBoard(board)
-
+		
 
 
 	def genFirstNodesFromBoard(self, board):
