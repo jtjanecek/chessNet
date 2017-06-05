@@ -29,7 +29,7 @@ class Node():
 		self.children = []
 
 		self.fen = fen
-		self._move = move
+		self.move = move
 
 		self.wins = 0
 		self.playouts = 0
@@ -39,7 +39,7 @@ class Node():
 	###################################################################################
 	def genChildren(self):
 		board = chess.Board(fen=self.fen)
-		board.push_uci(self._move)
+		board.push_uci(self.move)
 		legal_movelist = [str(x) for x in board.legal_moves]
 		for move in legal_movelist:
 			self.children.append(Node(board.fen(), move, self))
@@ -74,17 +74,15 @@ class MonteCarlo():
 		return bestMove
 
 	def runAllSimulations(self, board):
-		print("Generating top nodes")
 		topNodes = self.genNodesFromBoard(board)
 
 		for i in range(self._num_simulations):
-			print("Running simulation",i+1)
-
 			# Selection
 			leafNode = self.selection(topNodes)
 
 			# Expansion
 			leafNode.genChildren()
+			print(len(leafNode.children)," ",end="")
 			expandedNode = leafNode.children[int(random.random() * len(leafNode.children))]
 
 			# Simulation
@@ -92,10 +90,19 @@ class MonteCarlo():
 
 			# Backpropagation
 			expandedNode.backPropagate(result)
+		print()
 
 		# pick best move from top nodes
+		# Return either best ratio or most playouts
+		move = None
+		highest = 0
 		for node in topNodes:
-			print(node._move,node.wins,node.playouts)
+		#	print(node._move,node.wins,node.playouts)
+			if node.wins/node.playouts > highest:
+				move = node.move
+				highest = node.wins/node.playouts
+		return move
+
 
 	###################################################################################
 	# SELECTION
@@ -322,10 +329,6 @@ class Minimax_AI():
 			return sum * -1
 		return sum
 
-
-board = chess.Board()
-mc = MonteCarlo()
-mc.getMove(board)
 
 # for testing
 #if __name__ == '__main__':
