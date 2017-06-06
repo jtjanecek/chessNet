@@ -246,9 +246,9 @@ class NN_AI():
 class Minimax_AI():
 	def __init__(self, depth):
 		self._depth = depth
-		self._move_map = {'p':-1, 'n':-3,'b':-3,'r':-5,'q':-9,'k':-200,
-		    'P': 1, 'N': 3,'B': 3,'R': 5,'Q': 9,'K': 200,
-		    '.': 0}
+		self._move_map = {'p':-100, 'n':-300,'b':-300,'r':-500,'q':-900,'k':-20000,
+		    		  'P': 100, 'N': 300,'B': 300,'R': 500,'Q': 900,'K': 20000,
+		    		  '.': 0}
 
 	def __str__(self):
 		return 'MinimaxAI(depth=' + str(self._depth) + ')'
@@ -304,6 +304,14 @@ class Minimax_AI():
 			x = row.split(' ')
 			for piece in x:
 				sum += self._move_map[piece]
+	
+		if board.is_check():
+			# Whites turn	
+			if board.turn:
+				sum += 80
+			else:
+				sum -= 80
+
 		if self._turn == -1:
 			return sum * -1
 		return sum
