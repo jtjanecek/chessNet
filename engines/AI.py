@@ -41,6 +41,10 @@ class Node():
 		board = chess.Board(fen=self.fen)
 		board.push_uci(self.move)
 		legal_movelist = [str(x) for x in board.legal_moves]
+		if len(legal_movelist) == 0:
+			print(" ILLEGAL!!")
+			print(board)
+			print(" ILLEGAL!!")
 		for move in legal_movelist:
 			self.children.append(Node(board.fen(), move, self))
 
@@ -61,8 +65,12 @@ class Node():
 
 class MonteCarlo():
 	def __init__(self):
-		self._num_simulations = 500
+		self._num_simulations = 50
 		self._exploitation_parameter = 1.41421356237
+		self._topNodes = []
+
+	def __str__(self):
+		return 'MonteCarloAI(num_simulations=' + str(self._num_simulations) +  ')'
 
 	def getMove(self,board):
 		if board.turn:
@@ -74,11 +82,11 @@ class MonteCarlo():
 		return bestMove
 
 	def runAllSimulations(self, board):
-		topNodes = self.genNodesFromBoard(board)
+		self._topNodes = self.genNodesFromBoard(board)
 
 		for i in range(self._num_simulations):
 			# Selection
-			leafNode = self.selection(topNodes)
+			leafNode = self.selection(self._topNodes)
 
 			# Expansion
 			leafNode.genChildren()
@@ -94,14 +102,17 @@ class MonteCarlo():
 
 		# pick best move from top nodes
 		# Return either best ratio or most playouts
-		move = None
+		bestNode = None
 		highest = 0
-		for node in topNodes:
+		for node in self._topNodes:
 		#	print(node._move,node.wins,node.playouts)
-			if node.wins/node.playouts > highest:
-				move = node.move
-				highest = node.wins/node.playouts
-		return move
+			if node.playouts > highest:
+				bestNode = node
+				highest = node.playouts
+
+		# Set new top nodes based on current move
+
+		return bestNode.move
 
 
 	###################################################################################
@@ -233,68 +244,36 @@ class NN_AI():
 
 
 class Minimax_AI():
-	def __init__(self, depth, alphabeta=True):
+	def __init__(self, depth):
 		self._depth = depth
-		self._opposite = {1:-1,-1:1}
 		self._move_map = {'p':-1, 'n':-3,'b':-3,'r':-5,'q':-9,'k':-200,
 		    'P': 1, 'N': 3,'B': 3,'R': 5,'Q': 9,'K': 200,
 		    '.': 0}
-		self._alpha_beta = alphabeta
 
+	def __str__(self):
+		return 'MinimaxAI(depth=' + str(self._depth) + ')'
 
 	def getMove(self, board):
 		if board.turn:
 			self._turn = 1
 		else:
 			self._turn = -1
-		if self._alpha_beta:
-			return self._alphabeta(board, self._depth, True, -999999, 999999)[0]
-		else:
-			return self._minimax(board, self._depth, True)[0]
-
-	def _minimax(self, board, depth, maxPlayer):
-		legal_movelist = [str(x) for x in board.legal_moves]
-		if depth == 0 or legal_movelist == []:
-			return ('term',self.evaluateBoard(board))
-
-		if maxPlayer:
-			bestMove = 'none'
-			bestValue = -9999
-			for move in legal_movelist:
-				newBoard = copy.deepcopy(board)
-				newBoard.push_uci(move)
-				v = self._minimax(copy.deepcopy(newBoard), depth-1, False)
-				if v[1] > bestValue:
-					bestValue = v[1]
-					bestMove = move
-			return (bestMove,bestValue)
-
-		# minimized move
-		else:
-			bestMove = 'none'
-			bestValue = 9999
-			for move in legal_movelist:
-				newBoard = copy.deepcopy(board)
-				newBoard.push_uci(move)
-				v = self._minimax(copy.deepcopy(newBoard), depth-1, True)
-				if v[1] < bestValue:
-					bestValue = v[1]
-					bestMove = move
-			return (bestMove,bestValue)
+		return self._alphabeta(board, self._depth, True, -999999, 999999)[0]
 
 	def _alphabeta(self, board, depth, maxPlayer, alpha, beta):
 		legal_movelist = [str(x) for x in board.legal_moves]
+		random.shuffle(legal_movelist)
 		if depth == 0 or legal_movelist == []:
 			return ('term',self.evaluateBoard(board))
 
 		if maxPlayer:
 			bestMove = 'none'
-			bestValue = -9999
+			bestValue = -999999
 			for move in legal_movelist:
 				newBoard = copy.deepcopy(board)
 				newBoard.push_uci(move)
 				v = self._alphabeta(copy.deepcopy(newBoard), depth-1, False, alpha, beta)
-				if v[1] > bestValue:
+				if v[1] >= bestValue:
 					bestValue = v[1]
 					bestMove = move
 				alpha = max(alpha, bestValue)
@@ -305,12 +284,12 @@ class Minimax_AI():
 		# minimized move
 		else:
 			bestMove = 'none'
-			bestValue = 9999
+			bestValue = 999999
 			for move in legal_movelist:
 				newBoard = copy.deepcopy(board)
 				newBoard.push_uci(move)
 				v = self._alphabeta(copy.deepcopy(newBoard), depth-1, True, alpha, beta)
-				if v[1] < bestValue:
+				if v[1] <= bestValue:
 					bestValue = v[1]
 					bestMove = move
 				beta = min(beta, bestValue)
@@ -328,6 +307,21 @@ class Minimax_AI():
 		if self._turn == -1:
 			return sum * -1
 		return sum
+
+class ConsoleAI():
+	def __init__(self):
+		pass
+
+	def __str__(self):
+		return 'ConsoleAI'
+
+	def getMove(self, board):
+		legal_movelist = [str(x) for x in board.legal_moves]
+		print(legal_movelist)
+		x = input("your move: ")
+		while x not in legal_movelist:
+			x = input("your move: ")
+		return x
 
 
 # for testing

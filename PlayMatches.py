@@ -4,90 +4,106 @@ import timeit
 import engines.AI as AI
 import copy
 
-def runAlphaVsMinimax():
-	minimax = AI.Minimax_AI(3, alphabeta=False)
-	alphabeta = AI.Minimax_AI(4, alphabeta=True)
+def runMatches():
 
-	minimax_times = []
-	alphabeta_times = []
+	whiteEngine = False
+	blackEngine = False
 
-	board = Board()
-	while not board.is_stalemate() and not board.is_game_over():
-		start = timeit.default_timer()
-		m = minimax.getMove(copy.deepcopy(board))
-		stop = timeit.default_timer()
-		minimax_times.append(stop-start)
-		print("Minimax Move:",m)
-		board.push_uci(m)	
-		print(board)
-
-		if board.is_stalemate() or board.is_game_over():
-			break; 
-
-		start = timeit.default_timer()
-		m = alphabeta.getMove(copy.deepcopy(board))
-		stop = timeit.default_timer()
-		alphabeta_times.append(stop-start)
-		print("Alphabeta Move:",m)
-		board.push_uci(m)	
-		print(board)
-
-	print("minimax   avg time:",sum(minimax_times)/len(minimax_times))
-	print("alphabeta avg time:",sum(alphabeta_times)/len(alphabeta_times))
-	print(board)
-	if board.result() == '1-0':
-		res = 'Minimax Wins!'
-	if board.result() == '0-1':
-		res = 'Alphabeta Wins!'
-	else:
-		res = 'Stalemate'
-	print('Result:',res,'==============================================')
-
-
-def runMatches(engine):
-
-	engine = uci.popen_engine('engines/stockfish')
-	engine.uci()
-	
-	ai_type = input("1 for minimax, 2 for nn, 3 for montecarlo: ")
+	ai_type = input("White: 1:console, 2 minimax, 3 MonteCarlo, 4: stockfish: ")
 	if ai_type == '1':
-		myAI = AI.Minimax_AI(3, alphabeta=True)
+		white = AI.ConsoleAI()
 	elif ai_type == '2':
-		myAI = AI.NN_AI()
+		white = AI.Minimax_AI(int(input("Minimax Depth: ")))
 	elif ai_type == '3':
-		myAI = AI.MonteCarlo()
+		white = AI.MonteCarlo()
+	elif ai_type == '4':
+		whiteEngine = True
+		white = uci.popen_engine('engines/stockfish')
+		white.uci()
 
-	log = input("1 for log, enter for no log: ")
+	ai_type = input("Black: 1:console, 2 minimax, 3 MonteCarlo, 4: stockfish: ")
+	if ai_type == '1':
+		black = AI.ConsoleAI()
+	elif ai_type == '2':
+		black = AI.Minimax_AI(int(input("Minimax Depth: ")))
+	elif ai_type == '3':
+		black = AI.MonteCarlo()
+	elif ai_type == '4':
+		blackEngine = True
+		black = uci.popen_engine('engines/stockfish')
+		black.uci()
+
+	log = input("Logging? (y/n): ")
 	logging = False
-	if log == '1':
+	if log == 'y':
 		logging = True
 
-	maxdepth = int(input('max depth for opponent: ')) + 1
+	num_games = int(input("Number of games: "))
 
-	for i in range(1,maxdepth):
+	white_times = []
+	black_times = []
+
+	white_wins = 0
+	black_wins = 0
+	ties = 0
+
+
+	for i in range(num_games):
+		print("Playing game:",str(i+1) + '/' + str(num_games))
 		board = Board()
 		while not board.is_stalemate() and not board.is_game_over():
-			m = myAI.getMove(copy.deepcopy(board))
-			board.push_uci(m)	
+
+			# Get and play White's move
+			start = timeit.default_timer()
+			if whiteEngine:
+				white.position(copy.deepcopy(board))
+				whiteMove = str(white.go(movetime=5, depth=1, nodes=1)[0])
+			else:
+				whiteMove = white.getMove(copy.deepcopy(board))
+			stop = timeit.default_timer()
+			white_times.append(stop-start)
+
+			board.push_uci(whiteMove)
 			if logging:
-				print("AI Move:",m)
+				print("White Move:",whiteMove)
 				print(board)
 
+			# check if game over
 			if board.is_stalemate() or board.is_game_over():
-				break; 
-			
-			engine.position(copy.deepcopy(board))
-			engine_move = str(engine.go(movetime=5, depth=i)[0])
-			board.push_uci(engine_move)
+				break;
+
+			# Get and play Black's move
+			start = timeit.default_timer()
+			if blackEngine:
+				black.position(copy.deepcopy(board))
+				blackMove = str(black.go(movetime=5, depth=1, nodes=1)[0])
+			else:
+				blackMove = black.getMove(copy.deepcopy(board))
+			stop = timeit.default_timer()
+			black_times.append(stop-start)
+
+			board.push_uci(blackMove)
 			if logging:
-				print("Engine move:",engine_move)
+				print("Black move:",blackMove)
 				print(board)
 
-		print('Depth:',i, 'Result:',board.result(),'==============================================')
+		if board.result() == '1-0':
+			white_wins += 1
+		elif board.result() == '0-1':
+			black_wins += 1
+		else:
+			ties += 1
 
+	print("======================================================")
+	print("White:",str(white))
+	print("Average move time:",sum(white_times)/len(white_times))
+	print("Wins:",white_wins)
+	print("======================================================")
+	print("Black:",str(black))
+	print("Average move time:",sum(black_times)/len(black_times))
+	print("Wins:",black_wins)
+	print("======================================================")
+	print("Ties:",ties)
+	print("======================================================")
 
-runMatches('engines/stockfish')
-#runAlphaVsMinimax()
-
-
-		
+runMatches()
