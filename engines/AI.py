@@ -90,7 +90,7 @@ class MonteCarlo():
 
 			# Expansion
 			leafNode.genChildren()
-			print(len(leafNode.children)," ",end="")
+			#print(len(leafNode.children)," ",end="")
 			expandedNode = leafNode.children[int(random.random() * len(leafNode.children))]
 
 			# Simulation
@@ -98,7 +98,7 @@ class MonteCarlo():
 
 			# Backpropagation
 			expandedNode.backPropagate(result)
-		print()
+		#print()
 
 		# pick best move from top nodes
 		# Return either best ratio or most playouts
